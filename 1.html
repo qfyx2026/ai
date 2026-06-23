@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>心情能量站 · AI 完整版</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: linear-gradient(145deg, #f5f0ff, #e4d5f5, #d9c8f0); min-height: 100vh; display: flex; justify-content: center; padding: 24px 16px 60px; color: #1e1b4b; line-height: 1.6; }
+        .container { max-width: 590px; width: 100%; }
+        .browser-hint { background: rgba(255, 248, 238, 0.85); backdrop-filter: blur(6px); border-radius: 40px; padding: 8px 18px; font-size: 13px; color: #7c5c9e; text-align: center; margin-bottom: 18px; border: 1px solid rgba(139, 92, 246, 0.15); }
+        .browser-hint strong { color: #6d3bd4; }
+        header { text-align: center; margin-bottom: 28px; }
+        header h1 { font-size: 36px; background: linear-gradient(135deg, #6d3bd4, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: 2px; }
+        header p { color: #7c6b9e; letter-spacing: 4px; font-size: 16px; }
+        .card { background: rgba(255, 255, 255, 0.87); backdrop-filter: blur(16px); border-radius: 24px; padding: 26px 22px; box-shadow: 0 8px 40px rgba(107, 73, 186, 0.08); border: 1px solid rgba(255, 255, 255, 0.5); margin-bottom: 22px; }
+        .card-title { font-size: 17px; font-weight: 650; color: #4a2d7a; margin-bottom: 14px; }
+        .mic-section { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 20px; }
+        .mic-btn { width: 72px; height: 72px; border-radius: 50%; border: none; background: linear-gradient(135deg, #ddd6fe, #c4b5fd); font-size: 36px; cursor: pointer; box-shadow: 0 4px 16px rgba(139, 92, 246, 0.18); transition: all 0.25s; display: flex; align-items: center; justify-content: center; color: #4a2d7a; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; outline: none; touch-action: manipulation; }
+        .mic-btn:focus-visible { outline: 2px solid #6d3bd4; outline-offset: 2px; }
+        .mic-btn .mic-icon { pointer-events: none; user-select: none; }
+        .mic-btn:hover { transform: scale(1.04); box-shadow: 0 6px 24px rgba(139, 92, 246, 0.26); }
+        .mic-btn:active { transform: scale(0.95); }
+        .mic-btn.listening { background: linear-gradient(135deg, #fca5a5, #ef4444); color: #fff; animation: pulse 1.2s ease-in-out infinite; box-shadow: 0 4px 24px rgba(239, 68, 68, 0.45); }
+        @keyframes pulse { 0%, 100% { box-shadow: 0 4px 24px rgba(239, 68, 68, 0.45); } 50% { box-shadow: 0 4px 48px rgba(239, 68, 68, 0.65); } }
+        .mic-status { font-size: 13px; color: #7c6b9e; min-height: 20px; }
+        .mic-status.active { color: #dc2626; }
+        .mic-status.success { color: #6d3bd4; }
+        .mic-status.error { color: #b91c1c; }
+        .emotion-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 420px; margin: 0 auto; }
+        .emotion-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 6px 12px; border-radius: 18px; border: 2px solid transparent; background: rgba(255, 255, 255, 0.7); cursor: pointer; transition: all 0.2s; font-size: 14px; font-weight: 500; color: #3b2e5c; box-shadow: 0 2px 8px rgba(107, 73, 186, 0.05); user-select: none; }
+        .emotion-btn:hover { background: rgba(237, 233, 254, 0.8); border-color: #c4b5fd; transform: translateY(-2px); }
+        .emotion-btn .emoji-icon { font-size: 32px; }
+        .emotion-btn.active { background: #ede9fe; border-color: #6d3bd4; box-shadow: 0 4px 20px rgba(109, 59, 212, 0.18); color: #4a1d96; }
+        .info-card .emotion-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+        .info-card .emotion-head .big-emoji { font-size: 42px; }
+        .info-card .emotion-head .name { font-size: 24px; font-weight: 700; color: #2d1b69; }
+        .info-card .section-label { font-size: 14px; font-weight: 600; color: #6d3bd4; margin-top: 14px; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+        .info-card .section-label .tag { background: #ede9fe; border-radius: 20px; padding: 0 10px; font-size: 11px; color: #5b3b8a; height: 20px; line-height: 20px; }
+        .info-card .psych-text, .info-card .task-text { font-size: 15px; color: #2d2a3e; background: rgba(245, 240, 255, 0.5); border-radius: 14px; padding: 12px 16px; line-height: 1.7; }
+        .info-card .ai-footer { margin-top: 16px; text-align: right; font-size: 12px; color: #9a84c0; border-top: 1px solid rgba(139, 92, 246, 0.1); padding-top: 12px; }
+        .info-card .ai-footer span { background: rgba(139, 92, 246, 0.07); padding: 2px 14px; border-radius: 30px; }
+        .note-area textarea { width: 100%; min-height: 120px; padding: 14px 16px; border-radius: 16px; border: 1.5px solid #e0d6f2; background: rgba(255, 255, 255, 0.75); font-size: 15px; font-family: inherit; color: #1e1b4b; resize: vertical; outline: none; transition: border 0.2s, box-shadow 0.2s; }
+        .note-area textarea:focus { border-color: #8b5cf6; box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12); }
+        .note-area textarea.recording-highlight { border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15); }
+        .note-buttons { display: flex; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+        .note-buttons button { flex: 1; min-width: 70px; padding: 11px 0; border-radius: 40px; border: none; font-size: 15px; font-weight: 550; cursor: pointer; transition: all 0.2s; background: #f0ebfb; color: #4a2d7a; box-shadow: 0 2px 6px rgba(107, 73, 186, 0.06); }
+        .note-buttons button:hover { transform: translateY(-1.5px); box-shadow: 0 6px 18px rgba(107, 73, 186, 0.1); }
+        .note-buttons .btn-save { background: linear-gradient(135deg, #8b5cf6, #6d3bd4); color: #fff; }
+        .note-buttons .btn-clear { background: #f3eeff; color: #6b509a; }
+        .note-buttons .btn-read { background: #ede9fe; color: #5b3b8a; }
+        .note-feedback { font-size: 13px; color: #7c6b9e; margin-top: 10px; min-height: 20px; text-align: center; }
+        .note-feedback.success { color: #6d3bd4; }
+        .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 6px; }
+        .history-header .h-title { font-size: 17px; font-weight: 650; color: #4a2d7a; }
+        .history-header .h-count { font-size: 13px; color: #9a84c0; }
+        .btn-clear-history { padding: 6px 18px; border-radius: 30px; border: 1.5px solid #e0d6f2; background: transparent; font-size: 13px; color: #7c5c9e; cursor: pointer; transition: all 0.2s; }
+        .btn-clear-history:hover { background: #fef2f2; border-color: #fca5a5; color: #b91c1c; }
+        .history-list { max-height: 350px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #ddd6fe transparent; }
+        .history-list::-webkit-scrollbar { width: 5px; }
+        .history-list::-webkit-scrollbar-thumb { background: #ddd6fe; border-radius: 20px; }
+        .history-item { padding: 14px 0 12px; border-bottom: 1px solid #ede9fe; }
+        .history-item:last-child { border-bottom: none; }
+        .history-item .h-meta { display: flex; justify-content: space-between; font-size: 13px; color: #8b7aaa; margin-bottom: 4px; flex-wrap: wrap; gap: 4px; }
+        .history-item .h-meta .h-tag { background: #ede9fe; border-radius: 30px; padding: 0 12px; font-size: 12px; color: #6d3bd4; font-weight: 500; height: 22px; line-height: 22px; }
+        .history-item .h-content { font-size: 15px; color: #2d2a3e; word-break: break-word; }
+        .history-empty { text-align: center; color: #b0a0c8; padding: 28px 0 12px; }
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(46, 31, 74, 0.94); backdrop-filter: blur(10px); color: #f0ebfb; padding: 12px 28px; border-radius: 40px; font-size: 15px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.21); opacity: 0; transition: all 0.38s cubic-bezier(0.22, 1, 0.36, 1); pointer-events: none; z-index: 999; max-width: 88vw; text-align: center; }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        @media (max-width: 520px) { .container { padding: 0 4px; } header h1 { font-size: 28px; } .card { padding: 20px 16px; } .emotion-grid { gap: 10px; } .emotion-btn { padding: 12px 4px 10px; } .emotion-btn .emoji-icon { font-size: 27px; } .mic-btn { width: 66px; height: 66px; font-size: 32px; } .info-card .emotion-head .big-emoji { font-size: 33px; } .info-card .emotion-head .name { font-size: 20px; } }
+    </style>
+</head>
+<body>
+
+    <div id="toast" class="toast"></div>
+
+    <div class="container">
+        <div class="browser-hint">🌐 推荐使用 <strong>Chrome</strong> 或 <strong>Edge</strong> 浏览器获得最佳 AI 语音体验</div>
+
+        <header>
+            <h1>✨ 心情能量站</h1>
+            <p>倾听内心 · 拥抱成长</p>
+        </header>
+
+        <!-- 语音 + 情绪 -->
+        <div class="card">
+            <div class="mic-section">
+                <button id="micBtn" class="mic-btn" draggable="false" aria-label="按住说话">
+                    <span class="mic-icon">🎤</span>
+                </button>
+                <div id="micStatus" class="mic-status">按住麦克风说话，松手结束</div>
+            </div>
+            <div class="emotion-grid" id="emotionGrid">
+                <button class="emotion-btn" data-emotion="happy"><span class="emoji-icon">😊</span><span>快乐</span></button>
+                <button class="emotion-btn" data-emotion="sad"><span class="emoji-icon">😢</span><span>悲伤</span></button>
+                <button class="emotion-btn" data-emotion="angry"><span class="emoji-icon">😠</span><span>愤怒</span></button>
+                <button class="emotion-btn" data-emotion="fear"><span class="emoji-icon">😨</span><span>恐惧</span></button>
+                <button class="emotion-btn" data-emotion="surprise"><span class="emoji-icon">😲</span><span>惊讶</span></button>
+                <button class="emotion-btn" data-emotion="disgust"><span class="emoji-icon">😣</span><span>厌恶</span></button>
+            </div>
+        </div>
+
+        <!-- 信息卡片 -->
+        <div class="card info-card">
+            <div class="emotion-head">
+                <span class="big-emoji" id="bigEmoji">😊</span>
+                <span class="name" id="emotionName">快乐</span>
+            </div>
+            <div class="section-label">🧠 心理学解释 <span class="tag">AI 解读</span></div>
+            <div class="psych-text" id="psychText">快乐是一种积极情绪，源于多巴胺分泌，能增强创造力与社交联结。</div>
+            <div class="section-label">🌟 五育小任务 <span class="tag">今日成长</span></div>
+            <div class="task-text" id="taskText">德育：分享一件让你开心的小事</div>
+            <div class="ai-footer"><span>⚡ AI 实时响应</span></div>
+        </div>
+
+        <!-- 笔记 -->
+        <div class="card note-area">
+            <div class="card-title">📝 心情笔记</div>
+            <textarea id="noteInput" placeholder="按住 🎤 说话，识别内容会实时显示在这里…"></textarea>
+            <div class="note-buttons">
+                <button class="btn-save" id="saveNoteBtn">💾 保存</button>
+                <button class="btn-read" id="readNoteBtn">🔊 朗读</button>
+                <button class="btn-clear" id="clearNoteBtn">🗑️ 清空</button>
+            </div>
+            <div id="noteFeedback" class="note-feedback"></div>
+        </div>
+
+        <!-- 历史 -->
+        <div class="card">
+            <div class="history-header">
+                <span class="h-title">📚 历史记录</span>
+                <span class="h-count" id="historyCount">0 条</span>
+                <button class="btn-clear-history" id="clearHistoryBtn">清空全部</button>
+            </div>
+            <div class="history-list" id="historyList">
+                <div class="history-empty">还没有笔记，开始记录吧 ✍️</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ======================== 数据 ========================
+        const EMOTIONS = {
+            happy: {
+                emoji: '😊',
+                label: '快乐',
+                psych: '快乐是一种积极情绪，由多巴胺和内啡肽驱动，能提升免疫力、创造力和人际关系质量。经常体验快乐有助于形成心理韧性。',
+                tasks: [
+                    '德育：主动赞美一位同学或家人，分享正能量。',
+                    '智育：阅读一篇关于积极心理学的短文，记录三个新观点。',
+                    '体育：跟着音乐跳一支舞，让身体释放快乐因子。',
+                    '美育：画一幅代表你心中快乐的抽象画，用明亮色彩。',
+                    '劳育：整理自己的书桌或房间，在整洁中获得成就感。',
+                    '德育：给陌生人一个微笑或问候，传递善意。',
+                    '智育：学习一个有趣的笑话并讲给别人听，锻炼幽默感。',
+                    '体育：和朋友一起玩一次追逐游戏或跳绳。',
+                    '美育：拍一张让你感到幸福的照片，分享给亲友。',
+                    '劳育：帮家人做一件家务，并记录他们的笑容。',
+                    '德育：写下三件今天让你感恩的小事。',
+                    '智育：研究"心流"概念，尝试进入一次心流体验。'
+                ]
+            },
+            sad: {
+                emoji: '😢',
+                label: '悲伤',
+                psych: '悲伤是对失去或失望的自然反应，它帮助我们放慢脚步、反思与疗愈。适度表达悲伤能促进情感联结和心理恢复。',
+                tasks: [
+                    '德育：给一位同样难过的朋友写一句安慰的话。',
+                    '智育：了解"悲伤的五阶段理论"，思考自己处于哪个阶段。',
+                    '体育：做10分钟温和的瑜伽拉伸，舒缓身心。',
+                    '美育：听一首忧伤但优美的纯音乐，写下感受。',
+                    '劳育：整理一件旧物，回忆与之相关的故事，然后释怀。',
+                    '德育：和信任的人倾诉一次，接受情感支持。',
+                    '智育：阅读一篇关于"哀伤辅导"的文章，学习如何助人。',
+                    '体育：去户外散步15分钟，观察自然景色。',
+                    '美育：写一首短诗表达你此刻的心情。',
+                    '劳育：种植一株小植物，照料它成长。',
+                    '德育：给自己写一封鼓励的信，存放起来。',
+                    '智育：了解"眼泪的化学成分"，知道哭泣也是排毒。'
+                ]
+            },
+            angry: {
+                emoji: '😠',
+                label: '愤怒',
+                psych: '愤怒是边界被侵犯时的警报信号，适度的愤怒可以激发行动力。关键是通过健康方式疏导，避免破坏性爆发。',
+                tasks: [
+                    '德育：练习"非暴力沟通"，用"我感到……因为……"表达不满。',
+                    '智育：研究"情绪调节策略"，写下三种冷静方法。',
+                    '体育：进行5分钟高强度运动（如开合跳、拳击动作）释放怒气。',
+                    '美育：用力撕掉一张废纸，再将碎片拼贴成新的图案。',
+                    '劳育：打扫一个平时忽略的角落，用劳动转移注意力。',
+                    '德育：换位思考，写下对方可能的理由。',
+                    '智育：学习"STOP技术"：停下来、呼吸、观察、继续。',
+                    '体育：打枕头或沙袋10次，安全发泄。',
+                    '美育：用红色颜料随意涂鸦，再将其改造成一幅画。',
+                    '劳育：整理衣柜，把不穿的衣服叠整齐。',
+                    '德育：主动道歉（即使不完全错），练习宽容。',
+                    '智育：了解"愤怒冰山"模型，挖掘深层情绪。'
+                ]
+            },
+            fear: {
+                emoji: '😨',
+                label: '恐惧',
+                psych: '恐惧是面对威胁时的本能反应，激活"战或逃"机制。合理评估风险、逐步暴露脱敏可以有效管理恐惧。',
+                tasks: [
+                    '德育：向信任的人说出你的恐惧，获得支持。',
+                    '智育：学习"焦虑盒"技术：把担忧写在纸上，放入盒子。',
+                    '体育：练习腹式深呼吸（吸气4秒，呼气6秒），重复5次。',
+                    '美育：画一个"勇气护身符"图案，贴在床头。',
+                    '劳育：制定一个安全计划（如逃生路线），增强掌控感。',
+                    '德育：帮助一个比你更害怕的人，获得力量。',
+                    '智育：了解"恐惧清单"法，逐条评估真实风险。',
+                    '体育：尝试渐进式肌肉放松训练（从头到脚）。',
+                    '美育：观看一部励志电影，记录主角如何克服恐惧。',
+                    '劳育：检查家中安全隐患（如插座、门窗），提高安全感。',
+                    '德育：写下"如果最坏情况发生，我可以……"，找到应对方案。',
+                    '智育：学习"暴露疗法"的基本原理，设计一个小挑战。'
+                ]
+            },
+            surprise: {
+                emoji: '😲',
+                label: '惊讶',
+                psych: '惊讶是短暂的应激反应，打破既有预期，促使我们重新评估环境。惊喜能带来愉悦，而惊吓则需要快速调整。',
+                tasks: [
+                    '德育：给身边的人制造一个小惊喜（如留纸条、送小花）。',
+                    '智育：学习一个冷知识，并讲给同学听。',
+                    '体育：尝试一种从未做过的运动姿势（如平衡挑战）。',
+                    '美育：欣赏一幅超现实主义画作，记录第一印象。',
+                    '劳育：改变房间内一件物品的位置，体验新鲜感。',
+                    '德育：主动认识一个新朋友，了解他的一个独特之处。',
+                    '智育：研究"新奇效应"对大脑的影响。',
+                    '体育：闭眼单脚站立30秒，感受身体平衡的惊喜。',
+                    '美育：用三种意想不到的颜色搭配画一幅画。',
+                    '劳育：重新布置书桌，创造新的工作环境。',
+                    '德育：给父母或老师写一封感谢信，让他们惊喜。',
+                    '智育：学习一个魔术技巧，表演给他人看。'
+                ]
+            },
+            disgust: {
+                emoji: '😣',
+                label: '厌恶',
+                psych: '厌恶是对有害或令人反感事物的排斥反应，具有保护作用。学会区分合理的厌恶与偏见，能提升心理成熟度。',
+                tasks: [
+                    '德育：反思自己是否有过因偏见而排斥他人的经历。',
+                    '智育：了解"道德厌恶"的概念，讨论其社会功能。',
+                    '体育：用肥皂洗手30秒，感受清洁带来的舒适。',
+                    '美育：清理手机相册或电脑桌面，删除不需要的文件。',
+                    '劳育：彻底清洗一个水杯或餐具，体会洁净的愉悦。',
+                    '德育：尝试吃一种以前不喜欢的蔬菜（若无过敏），开放心态。',
+                    '智育：学习"厌恶的进化起源"，理解它的保护意义。',
+                    '体育：进行一次全身拉伸，排出身体的"僵硬感"。',
+                    '美育：整理书架，把书籍按颜色或大小重新排列。',
+                    '劳育：刷洗厨房水槽或卫生间瓷砖，体验焕然一新。',
+                    '德育：和持有不同观点的人平和交流，练习包容。',
+                    '智育：研究"单纯曝光效应"，了解熟悉如何降低厌恶。'
+                ]
+            }
+        };
+
+        // ======================== 状态 ========================
+        let currentEmotion = 'happy';
+        let recognition = null;
+        let isListening = false;
+        let startingLock = false;
+        let finalTranscript = '';
+        const synth = window.speechSynthesis;
+        let zhVoice = null;
+
+        // DOM 元素
+        const micBtn = document.getElementById('micBtn');
+        const micStatus = document.getElementById('micStatus');
+        const emotionBtns = document.querySelectorAll('.emotion-btn');
+        const bigEmoji = document.getElementById('bigEmoji');
+        const emotionName = document.getElementById('emotionName');
+        const psychText = document.getElementById('psychText');
+        const taskText = document.getElementById('taskText');
+        const noteInput = document.getElementById('noteInput');
+        const saveNoteBtn = document.getElementById('saveNoteBtn');
+        const readNoteBtn = document.getElementById('readNoteBtn');
+        const clearNoteBtn = document.getElementById('clearNoteBtn');
+        const noteFeedback = document.getElementById('noteFeedback');
+        const historyList = document.getElementById('historyList');
+        const historyCount = document.getElementById('historyCount');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+        const toastEl = document.getElementById('toast');
+
+        // ======================== 工具函数 ========================
+        function getRandomTask(key) {
+            const tasks = EMOTIONS[key].tasks;
+            return tasks[Math.floor(Math.random() * tasks.length)];
+        }
+
+        function showToast(msg, duration = 2000) {
+            toastEl.textContent = msg;
+            toastEl.classList.add('show');
+            clearTimeout(toastEl._timer);
+            toastEl._timer = setTimeout(() => toastEl.classList.remove('show'), duration);
+        }
+
+        function updateInfo(emotionKey) {
+            const data = EMOTIONS[emotionKey];
+            if (!data) return;
+            bigEmoji.textContent = data.emoji;
+            emotionName.textContent = data.label;
+            psychText.textContent = data.psych;
+            taskText.textContent = getRandomTask(emotionKey);
+            currentEmotion = emotionKey;
+            emotionBtns.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.emotion === emotionKey);
+            });
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        document.addEventListener('selectstart', function(e) {
+            if (e.target.closest('.mic-btn')) {
+                e.preventDefault();
+            }
+        });
+
+        // ======================== 情绪按钮 ========================
+        emotionBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const key = this.dataset.emotion;
+                updateInfo(key);
+                if (isListening) stopListening();
+                noteFeedback.textContent = '';
+            });
+        });
+
+        // ======================== 语音识别 ========================
+        function initRecognition() {
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SR) {
+                micStatus.textContent = '⚠️ 请使用 Chrome/Edge 浏览器';
+                micStatus.className = 'mic-status error';
+                micBtn.disabled = true;
+                return null;
+            }
+            const rec = new SR();
+            rec.lang = 'zh-CN';
+            rec.continuous = true;
+            rec.interimResults = true;
+
+            rec.onresult = function(e) {
+                let interimTranscript = '';
+                finalTranscript = '';
+                for (let i = e.resultIndex; i < e.results.length; i++) {
+                    const result = e.results[i];
+                    if (result.isFinal) {
+                        finalTranscript += result[0].transcript;
+                    } else {
+                        interimTranscript += result[0].transcript;
+                    }
+                }
+                noteInput.value = finalTranscript + interimTranscript;
+                noteInput.scrollTop = noteInput.scrollHeight;
+                if (interimTranscript) {
+                    micStatus.textContent = `🎤 识别中… ${interimTranscript.slice(0, 28)}${interimTranscript.length > 28 ? '…' : ''}`;
+                    micStatus.className = 'mic-status active';
+                } else if (finalTranscript) {
+                    micStatus.textContent = `✅ 已识别 ${finalTranscript.length} 字`;
+                    micStatus.className = 'mic-status success';
+                }
+            };
+
+            rec.onerror = function(e) {
+                if (e.error === 'aborted') return;
+                let msg = '❌ 识别出错，请重试';
+                if (e.error === 'not-allowed') msg = '❌ 麦克风权限被拒绝，请在浏览器设置中允许';
+                else if (e.error === 'no-speech') msg = '⏳ 没有检测到语音，请再说一次';
+                micStatus.textContent = msg;
+                micStatus.className = 'mic-status error';
+                if (isListening) {
+                    isListening = false;
+                    micBtn.classList.remove('listening');
+                    noteInput.classList.remove('recording-highlight');
+                }
+                startingLock = false;
+            };
+
+            rec.onend = function() {
+                if (isListening) {
+                    try { rec.start(); } catch(e) {
+                        isListening = false;
+                        micBtn.classList.remove('listening');
+                        noteInput.classList.remove('recording-highlight');
+                        micStatus.textContent = '⚠️ 识别异常，请重新按住';
+                        micStatus.className = 'mic-status error';
+                        startingLock = false;
+                    }
+                } else {
+                    micBtn.classList.remove('listening');
+                    noteInput.classList.remove('recording-highlight');
+                    startingLock = false;
+                }
+            };
+            return rec;
+        }
+
+        function startListening() {
+            if (startingLock) return;
+            startingLock = true;
+
+            if (!recognition) {
+                recognition = initRecognition();
+                if (!recognition) {
+                    startingLock = false;
+                    return;
+                }
+            }
+            try {
+                noteInput.value = '';
+                finalTranscript = '';
+                recognition.start();
+                isListening = true;
+                micBtn.classList.add('listening');
+                noteInput.classList.add('recording-highlight');
+                micStatus.textContent = '🎙️ 正在聆听…松手结束';
+                micStatus.className = 'mic-status active';
+                noteFeedback.textContent = '';
+            } catch (err) {
+                micStatus.textContent = '⚠️ 启动失败，请刷新后重试';
+                micStatus.className = 'mic-status error';
+                isListening = false;
+                micBtn.classList.remove('listening');
+                noteInput.classList.remove('recording-highlight');
+                startingLock = false;
+            }
+        }
+
+        function stopListening() {
+            if (recognition && isListening) {
+                isListening = false;
+                try { recognition.stop(); } catch(e) {}
+                micBtn.classList.remove('listening');
+                noteInput.classList.remove('recording-highlight');
+                const text = noteInput.value.trim();
+                if (text) {
+                    micStatus.textContent = `✅ 识别完成：${text.slice(0, 36)}${text.length > 36 ? '…' : ''}`;
+                    micStatus.className = 'mic-status success';
+                    autoMatchEmotion(text);
+                    speakContent(text);
+                } else {
+                    micStatus.textContent = '⏹️ 未检测到语音内容';
+                    micStatus.className = 'mic-status';
+                }
+            }
+            startingLock = false;
+        }
+
+        micBtn.addEventListener('pointerdown', function(e) {
+            e.preventDefault();
+            if (!isListening) startListening();
+        });
+        micBtn.addEventListener('pointerup', function(e) {
+            e.preventDefault();
+            if (isListening) stopListening();
+        });
+        micBtn.addEventListener('pointerleave', function(e) {
+            if (isListening) stopListening();
+        });
+
+        // ======================== 情绪自动匹配 ========================
+        function autoMatchEmotion(text) {
+            const lower = text.toLowerCase();
+            const rules = [
+                { words: ['快乐', '开心', '高兴', '愉快', '爽', '哈哈', '耶', '幸福', '喜悦', '乐'], key: 'happy' },
+                { words: ['悲伤', '难过', '伤心', '哭', '沮丧', '忧郁', '哀伤', '心碎', '失落', '悲痛'], key: 'sad' },
+                { words: ['愤怒', '生气', '恼火', '怒', '烦躁', '不爽', '气死', '恨', '暴躁', '发火'], key: 'angry' },
+                { words: ['恐惧', '害怕', '紧张', '不安', '恐慌', '焦虑', '担心', '畏惧', '心惊', '吓'], key: 'fear' },
+                { words: ['惊讶', '吃惊', '意外', '震惊', '没想到', '居然', '竟然', '哇', '天哪', '惊'], key: 'surprise' },
+                { words: ['厌恶', '讨厌', '恶心', '反感', '嫌弃', '烦', '受不了', '憎恶', '呕吐', '不屑'], key: 'disgust' }
+            ];
+            for (const r of rules) {
+                if (r.words.some(w => lower.includes(w))) {
+                    updateInfo(r.key);
+                    showToast(`🧠 识别到「${EMOTIONS[r.key].label}」情绪，已自动切换`, 1400);
+                    return;
+                }
+            }
+            showToast('💬 未识别到特定情绪，保持当前状态', 1200);
+        }
+
+        // ======================== 语音合成朗读 ========================
+        if (synth) {
+            synth.onvoiceschanged = () => {
+                zhVoice = synth.getVoices().find(v => v.lang.startsWith('zh'));
+            };
+            zhVoice = synth.getVoices().find(v => v.lang.startsWith('zh'));
+        }
+
+        function speakContent(text) {
+            if (!synth) return;
+            if (synth.speaking) synth.cancel();
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.lang = 'zh-CN';
+            if (zhVoice) utter.voice = zhVoice;
+            utter.onstart = () => {
+                micStatus.textContent = '🔊 正在朗读…';
+                micStatus.className = 'mic-status active';
+            };
+            utter.onend = () => {
+                micStatus.textContent = '✅ 朗读完成';
+                micStatus.className = 'mic-status success';
+            };
+            utter.onerror = () => {
+                micStatus.textContent = '⚠️ 朗读出错';
+                micStatus.className = 'mic-status error';
+            };
+            synth.speak(utter);
+        }
+
+        readNoteBtn.addEventListener('click', function() {
+            const text = noteInput.value.trim();
+            if (text) {
+                speakContent(text);
+            } else {
+                const psych = psychText.textContent;
+                const task = taskText.textContent;
+                const content = `心理学解释：${psych}。五育小任务：${task}`;
+                speakContent(content);
+            }
+        });
+
+        // ======================== 笔记存储 ========================
+        function getNotes() {
+            try {
+                return JSON.parse(localStorage.getItem('mood_notes') || '[]');
+            } catch { return []; }
+        }
+
+        function setNotes(arr) {
+            localStorage.setItem('mood_notes', JSON.stringify(arr));
+        }
+
+        function renderHistory() {
+            const notes = getNotes();
+            historyCount.textContent = `${notes.length} 条`;
+            if (notes.length === 0) {
+                historyList.innerHTML = '<div class="history-empty">还没有笔记，开始记录吧 ✍️</div>';
+                return;
+            }
+            notes.sort((a, b) => new Date(b.time) - new Date(a.time));
+            let html = '';
+            notes.forEach(n => {
+                const d = new Date(n.time);
+                const timeStr =
+                    `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+                const emo = EMOTIONS[n.emotion] || { emoji: '💬', label: n.emotion };
+                html += `
+                    <div class="history-item">
+                        <div class="h-meta">
+                            <span>${timeStr}</span>
+                            <span class="h-tag">${emo.emoji} ${emo.label}</span>
+                        </div>
+                        <div class="h-content">${escapeHtml(n.content)}</div>
+                    </div>
+                `;
+            });
+            historyList.innerHTML = html;
+        }
+
+        saveNoteBtn.addEventListener('click', function() {
+            const content = noteInput.value.trim();
+            if (!content) {
+                noteFeedback.textContent = '✏️ 请先输入或语音输入内容';
+                noteFeedback.className = 'note-feedback';
+                return;
+            }
+            const notes = getNotes();
+            notes.push({
+                time: new Date().toISOString(),
+                emotion: currentEmotion,
+                content: content
+            });
+            setNotes(notes);
+            renderHistory();
+            noteInput.value = '';
+            noteFeedback.textContent = '✅ 笔记已保存！';
+            noteFeedback.className = 'note-feedback success';
+            showToast('💾 笔记已保存到本地', 1500);
+        });
+
+        clearNoteBtn.addEventListener('click', function() {
+            noteInput.value = '';
+            noteFeedback.textContent = '🗑️ 笔记已清空';
+            noteFeedback.className = 'note-feedback';
+        });
+
+        clearHistoryBtn.addEventListener('click', function() {
+            const notes = getNotes();
+            if (notes.length === 0) {
+                showToast('📭 暂无笔记需要清空', 1200);
+                return;
+            }
+            if (confirm('确定要清空所有心情笔记吗？此操作不可撤销。')) {
+                setNotes([]);
+                renderHistory();
+                noteFeedback.textContent = '🗑️ 全部历史已清空';
+                noteFeedback.className = 'note-feedback';
+                showToast('已清空所有笔记', 1400);
+            }
+        });
+
+        // ======================== 初始化 ========================
+        updateInfo('happy');
+        renderHistory();
+        if (synth) synth.getVoices();
+    </script>
+</body>
+</html>
